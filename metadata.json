@@ -1,0 +1,8 @@
+{
+  "name": "Copy of JARVIS AI",
+  "description": "A futuristic voice assistant with real-time internet access and camera vision. Features a sleek HUD interface and autonomous action capabilities.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
