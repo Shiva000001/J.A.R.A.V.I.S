@@ -1,6 +1,7 @@
 
 export enum AssistantStatus {
   IDLE = 'IDLE',
+  CONNECTING = 'CONNECTING',
   LISTENING = 'LISTENING',
   THINKING = 'THINKING',
   SPEAKING = 'SPEAKING',

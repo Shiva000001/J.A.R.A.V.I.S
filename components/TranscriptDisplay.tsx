@@ -1,7 +1,13 @@
+
 import React, { useEffect, useRef } from 'react';
 
+interface TranscriptEntry {
+  speaker: 'user' | 'model';
+  text: string;
+}
+
 interface TranscriptDisplayProps {
-  transcript: { speaker: 'user' | 'model', text: string }[];
+  transcript: TranscriptEntry[];
   interimText: string | null;
 }
 
@@ -13,17 +19,51 @@ const TranscriptDisplay: React.FC<TranscriptDisplayProps> = ({ transcript, inter
   }, [transcript, interimText]);
 
   return (
-    <div className="absolute top-4 left-4 text-left text-base max-w-sm w-full bg-black/40 p-4 rounded-lg backdrop-blur-sm max-h-64 overflow-y-auto font-sans shadow-lg">
-      <div className="space-y-2">
+    <div className="w-full h-80 bg-black/40 border border-cyan-500/20 rounded-lg backdrop-blur-md p-4 flex flex-col font-mono shadow-2xl">
+      <div className="flex-grow overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+        {transcript.length === 0 && !interimText && (
+            <div className="h-full flex items-center justify-center">
+                <p className="text-zinc-700 text-[10px] tracking-widest text-center uppercase">System logs empty...<br/>Waiting for uplink</p>
+            </div>
+        )}
+        
         {transcript.map((entry, index) => (
-          <p key={index} className={entry.speaker === 'user' ? 'text-gray-300' : 'text-cyan-300'}>
-            <span className="font-bold capitalize">{entry.speaker}: </span>
-            {entry.text}
-          </p>
+          <div key={index} className="animate-in fade-in slide-in-from-left-2 duration-300">
+            <span className={`text-[10px] font-bold ${entry.speaker === 'user' ? 'text-zinc-500' : 'text-cyan-600'}`}>
+              {entry.speaker === 'user' ? '>> USER_INPUT' : '<< JARVIS_LOG'}
+            </span>
+            <p className={`text-sm mt-0.5 ${entry.speaker === 'user' ? 'text-zinc-300' : 'text-cyan-400'}`}>
+              {entry.text}
+            </p>
+          </div>
         ))}
-        {interimText && <p className="text-gray-400 opacity-80">{interimText}</p>}
+        
+        {interimText && (
+          <div className="animate-pulse">
+            <p className="text-[10px] text-cyan-500/50 italic uppercase tracking-widest">Processing_Stream...</p>
+            <p className="text-sm text-cyan-500/70 italic border-l-2 border-cyan-500/20 pl-2">
+              {interimText}
+            </p>
+          </div>
+        )}
+        <div ref={endOfMessagesRef} />
       </div>
-      <div ref={endOfMessagesRef} />
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(6, 182, 212, 0.2);
+          border-radius: 2px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(6, 182, 212, 0.5);
+        }
+      `}} />
     </div>
   );
 };

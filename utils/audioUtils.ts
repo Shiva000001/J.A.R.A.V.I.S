@@ -1,3 +1,4 @@
+
 import { Blob } from '@google/genai';
 
 export function encode(bytes: Uint8Array): string {
@@ -38,14 +39,42 @@ export async function decodeAudioData(
   return buffer;
 }
 
-export function createBlob(data: Float32Array): Blob {
-  const l = data.length;
+/**
+ * Creates a PCM blob for the Gemini API.
+ * Resamples input data to 16000Hz using linear interpolation.
+ */
+export function createBlob(data: Float32Array, sourceSampleRate: number): Blob {
+  const targetSampleRate = 16000;
+  let resampledData: Float32Array;
+
+  if (sourceSampleRate === targetSampleRate) {
+    resampledData = data;
+  } else {
+    // Linear Interpolation Resampling
+    const ratio = sourceSampleRate / targetSampleRate;
+    const newLength = Math.floor(data.length / ratio);
+    resampledData = new Float32Array(newLength);
+    for (let i = 0; i < newLength; i++) {
+      const pos = i * ratio;
+      const index = Math.floor(pos);
+      const fraction = pos - index;
+      
+      const val1 = data[index];
+      const val2 = (index + 1 < data.length) ? data[index + 1] : val1;
+      
+      // Linear interpolation between the two nearest samples
+      resampledData[i] = val1 + (val2 - val1) * fraction;
+    }
+  }
+
+  const l = resampledData.length;
   const int16 = new Int16Array(l);
   for (let i = 0; i < l; i++) {
-    // Clamp values to avoid distortion
-    const s = Math.max(-1, Math.min(1, data[i]));
+    // Clamp values to avoid distortion and convert to 16-bit PCM
+    const s = Math.max(-1, Math.min(1, resampledData[i]));
     int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
   }
+
   return {
     data: encode(new Uint8Array(int16.buffer)),
     mimeType: 'audio/pcm;rate=16000',
